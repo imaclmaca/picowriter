@@ -28,15 +28,15 @@ msb | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | lsb
  * Note: GPIO pins 2..9 are used for the 8 bits, since GPIO 0,1 are used for
  * the serial port.
  *
- * Note : The layout is not "symmetrical" like the CyKey and so it does not
- * support the mirrored "left-hand" mode that the CyKey has. Though doing so
- * would only need one more key switch and GPIO line, and if "mirror" mode
- * is selected then the keymap would be bit-reversed and shifted on read to
- * produce the current 8-bit mask. So do-able...
+ * Note : The layout is not "symmetrical" with 9 keys like the CyKey and so
+ * it does not support the mirrored "left-hand" mode that the CyKey has.
+ * Though doing so would only need one more key switch and GPIO line, and if
+ * "mirror" mode was selected then the keymap could be bit-reversed and shifted
+ * down read to produce the current 8-bit mask. So do-able...
  *
  */
 
-// Basics ti get the pico going...
+// Basics to get the pico going...
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"

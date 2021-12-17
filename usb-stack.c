@@ -25,7 +25,7 @@
 
 /*
  * This is basically just Ha Thach's USB HID example code, bodged up to support
- * my simple keyboard only mechanism.
+ * my simplified keyboard only mechanism.
  */
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,9 +53,6 @@ static uint32_t blink_phase = 0;
 static const uint16_t blink_not_mounted [BLINK_LEN] = {80, 500, 80, 500}; // SHORT,long,SHORT,long
 static const uint16_t blink_mounted [BLINK_LEN] = {80, 80, 80, 1900}; // SHORT,short,SHORT,long
 static const uint16_t blink_suspended [BLINK_LEN] = {80, 1700, 80, 1700}; // SHORT,long,SHORT,long
-
-// defined in kb-main.c
-extern uint32_t kc_get (void);
 
 // Used to track the LED flash state
 static uint32_t blink_state = BLINK_NOT_MOUNTED;
@@ -104,13 +101,13 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
   {
     case REPORT_ID_KEYBOARD:
     {
-      // use to avoid send multiple consecutive zero report for keyboard
+      // use to avoid sending multiple consecutive zero reports for the keyboard
       static bool has_keyboard_key = false;
 
       if ( btn )
       {
         msg_blk code;
-        code.u_msg = btn;
+        code.u_msg = btn; // use the union to ease unpacking of the key code message
         uint8_t Mods = code.p[3];
         uint8_t keycode[6] = { 0 };
         keycode[0] = code.p[2];
@@ -120,12 +117,12 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
         keycode[4] = 0;
         keycode[5] = 0;
 
-        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, Mods, keycode); // KEY DOWN
+        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, Mods, keycode); // KEY DOWN, in effect
         has_keyboard_key = true;
       }
       else
       {
-        // send empty key report if previously has key pressed - KEY UP effectively
+        // send an empty key report if previously had key pressed - KEY UP effectively
         if (has_keyboard_key)
         {
           tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, NULL);
