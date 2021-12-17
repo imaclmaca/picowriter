@@ -34,7 +34,7 @@ pico_enable_stdio_uart(picowriter 1)
 # Where do we need to look to find stuff?
 target_include_directories(picowriter PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
-# Pull in pico_stdlib which aggregates commonly used features
+# Pull in pico_stdlib which aggregates commonly used features, also multicore and tinyusb are needed
 target_link_libraries(picowriter PRIVATE pico_stdlib pico_multicore tinyusb_device tinyusb_board)
 
 # create map/bin/hex/uf2 file etc.

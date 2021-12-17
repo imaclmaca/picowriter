@@ -41,7 +41,6 @@ msb | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | lsb
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 #include <string.h>
-
 #include <ctype.h>
 
 // tinyusb parts...
