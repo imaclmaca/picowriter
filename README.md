@@ -4,8 +4,9 @@ Use a Raspberry Pico to emulate a MicroWriter keyboard
 The key-code tables defined here are based on what my CyKey does and what I can
 remember (or look up!) about what the original Microwriter actually did.
 
-[Microwriter](https://en.wikipedia.org/wiki/Microwriter)
-[CyKey](https://www.sites.google.com/site/cykeybellaire/home)
+Microwriter described here: [Microwriter](https://en.wikipedia.org/wiki/Microwriter)
+
+CyKey from Bellaire Electronics described here: [CyKey](https://www.sites.google.com/site/cykeybellaire/home)
 
 This code runs on a Raspberry Pico RP2040 board and uses the tinyusb stack
 to implement a USB HID keyboard device.
