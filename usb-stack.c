@@ -40,9 +40,10 @@
 
 /* Blink pattern */
 enum  {
-  BLINK_NOT_MOUNTED = 500,
-  BLINK_MOUNTED = 1000,
-  BLINK_SUSPENDED = 2500,
+  BLINK_NONE = 0,
+  BLINK_NOT_MOUNTED,
+  BLINK_MOUNTED,
+  BLINK_SUSPENDED
 };
 
 #define BLINK_LEN   4
@@ -57,7 +58,7 @@ static const uint16_t blink_suspended [BLINK_LEN] = {80, 1700, 80, 1700}; // SHO
 extern uint32_t kc_get (void);
 
 // Used to track the LED flash state
-static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
+static uint32_t blink_state = BLINK_NOT_MOUNTED;
 
 //--------------------------------------------------------------------+
 // Device callbacks
@@ -66,13 +67,13 @@ static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 // Invoked when device is mounted
 void tud_mount_cb(void)
 {
-  blink_interval_ms = BLINK_MOUNTED;
+  blink_state = BLINK_MOUNTED;
 } // tud_mount_cb
 
 // Invoked when device is unmounted
 void tud_umount_cb(void)
 {
-  blink_interval_ms = BLINK_NOT_MOUNTED;
+  blink_state = BLINK_NOT_MOUNTED;
 } // tud_umount_cb
 
 // Invoked when USB is suspended
@@ -81,13 +82,13 @@ void tud_umount_cb(void)
 void tud_suspend_cb(bool remote_wakeup_en)
 {
   (void) remote_wakeup_en;
-  blink_interval_ms = BLINK_SUSPENDED;
+  blink_state = BLINK_SUSPENDED;
 } // tud_suspend_cb
 
 // Invoked when USB bus is resumed
 void tud_resume_cb(void)
 {
-  blink_interval_ms = BLINK_MOUNTED;
+  blink_state = BLINK_MOUNTED;
 } // tud_resume_cb
 
 //--------------------------------------------------------------------+
@@ -134,10 +135,11 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
     }
     break;
 
+    /* The original example also provided these endpoints, but we do not use them here... */
     // All the other endpoints from the example code are skipped
-    case REPORT_ID_MOUSE:
-    case REPORT_ID_CONSUMER_CONTROL:
-    case REPORT_ID_GAMEPAD:
+    //case REPORT_ID_MOUSE:
+    //case REPORT_ID_CONSUMER_CONTROL:
+    //case REPORT_ID_GAMEPAD:
     default:
     break;
   }
@@ -171,7 +173,8 @@ void hid_task(void)
 } // hid_task
 
 // Invoked when sent REPORT successfully to host
-// Application can use this to send the next report
+// Application can use this to chain to the next report - though since we only have the keyboard now,
+// that seems unlikely to actually do anything!
 // Note: For composite reports, report[0] is report ID
 void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len)
 {
@@ -201,21 +204,22 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
   return 0;
 } // tud_hid_get_report_cb
 
-/* Invoked when received SET_REPORT control request or
- * received data on OUT endpoint ( Report ID = 0, Type = 0 )
+/* Invoked when we received SET_REPORT control request or
+ * receive data on OUT endpoint ( Report ID = 0, Type = 0 )
  *
  * Here, this is only checking for the CapsLock message from the host,
  * which PicoWriter ignores at present - though it possibly could make
  * use of it.
  * All this does is change the board LED, in effect.
  */
-void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize)
+void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type,
+                           uint8_t const* buffer, uint16_t bufsize)
 {
   (void) instance;
 
   if (report_type == HID_REPORT_TYPE_OUTPUT)
   {
-    // Set keyboard LED e.g Capslock, Numlock etc...
+    // Set keyboard LED e.g Capslock in this case - which we do not currently even use!
     if (report_id == REPORT_ID_KEYBOARD)
     {
       // bufsize should be (at least) 1
@@ -226,13 +230,13 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
       if (kbd_leds & KEYBOARD_LED_CAPSLOCK)
       {
         // Capslock On: disable blink, turn led on
-        blink_interval_ms = 0;
+        blink_state = BLINK_NONE;
         board_led_write(true);
       }else
       {
         // Caplocks Off: back to normal blink
         board_led_write(false);
-        blink_interval_ms = BLINK_MOUNTED;
+        blink_state = BLINK_MOUNTED;
       }
     }
   }
@@ -247,10 +251,10 @@ void led_blinking_task(void)
   static int led_state = 0;
 
   // blink is disabled - typically happens when CapsLock is set ON by tud_hid_set_report_cb()
-  if (!blink_interval_ms) return;
+  if (!blink_state) return;
 
   const uint16_t *seq = NULL;
-  switch (blink_interval_ms)
+  switch (blink_state)
   {
     case BLINK_NOT_MOUNTED:
     seq = blink_not_mounted;
@@ -268,13 +272,12 @@ void led_blinking_task(void)
   uint32_t delay_for = seq [blink_phase];
 
   // Blink every "delay_for" ms
-  if ( board_millis() - start_ms < delay_for) return; // not enough time
+  if ( (board_millis() - start_ms) < delay_for) return; // not enough time has elapsed
   start_ms += delay_for;
   blink_phase = (blink_phase + 1) & BLINK_MASK;
 
   board_led_write(led_state);
-  led_state = 1 - led_state; // toggle
+  led_state = 1 - led_state; // toggle LED state
 } // led_blinking_task
 
-// end of file //
-
+// End of File //

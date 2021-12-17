@@ -33,10 +33,12 @@
 enum
 {
   REPORT_ID_KEYBOARD = 1,
-  REPORT_ID_MOUSE,
-  REPORT_ID_CONSUMER_CONTROL,
-  REPORT_ID_GAMEPAD,
   REPORT_ID_COUNT
+/* The original example also provided these endpoints, but we do not need them here... */
+  //REPORT_ID_MOUSE,
+  //REPORT_ID_CONSUMER_CONTROL,
+  //REPORT_ID_GAMEPAD,
+  //REPORT_ID_COUNT
 };
 
 #endif /* USB_DESCRIPTORS_H_ */

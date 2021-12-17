@@ -51,8 +51,8 @@ msb | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | lsb
 #include "kb-main.h"
 
 /* Are we emitting serial debug? */
-#define SER_DBG_ON  1  // serial debug on
-// #undef SER_DBG_ON      // serial debug off
+//#define SER_DBG_ON  1  // serial debug on
+#undef SER_DBG_ON      // serial debug off
 
 // Keyboard mapping and decode tables
 #define FNK (10)  // Base of the "Function Key" range
