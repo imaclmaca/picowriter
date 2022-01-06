@@ -27,6 +27,9 @@ extern uint32_t kc_get (void);
 extern void led_blinking_task(void);
 extern void hid_task(void);
 
+// Defined in usb_descriptors.c
+void set_serial_string (char const *ser);
+
 #ifdef __cplusplus
  }
 #endif

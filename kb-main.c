@@ -40,6 +40,7 @@ msb | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | lsb
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
+#include "pico/unique_id.h"
 #include <string.h>
 #include <ctype.h>
 
@@ -497,6 +498,15 @@ int main()
 {
     board_init();
 
+    // Try to grab the Pico board ID info.
+    pico_unique_board_id_t id_out;
+    pico_get_unique_board_id (&id_out);
+
+    char id_string [(2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES) + 1]; // Should be 17 - PICO_UNIQUE_BOARD_ID_SIZE_BYTES == 8
+    pico_get_unique_board_id_string (id_string, 17);
+
+    set_serial_string (id_string);
+
     // enable the board LED - we flash that to show USB state etc.
     const uint LED_PIN = PICO_DEFAULT_LED_PIN;
     gpio_init(LED_PIN);
@@ -516,6 +526,13 @@ int main()
 #ifdef SER_DBG_ON
     stdio_init_all(); // start the pico stdio for debug support
     printf ("\n-- PicoWriter starting --\n");
+
+    printf ("Device ID: %s\n", id_string);
+    for (idx = 0; idx < 8; ++idx)
+    {
+        printf ("%02X ", id_out.id[idx]);
+    }
+    printf ("\nID done\n");
 #endif // SER_DBG_ON
 
     // Start the keyboard scanner thread on core-1

@@ -189,10 +189,15 @@ char const* string_desc_arr [] =
   (const char[]) { 0x09, 0x04 }, // 0: Supported language is English (0x0409)
   "PicoWrite",                   // 1: Manufacturer
   "picowriter",                  // 2: Product
-  "345678",                      // 3: Serials, should use chip ID
+  "345678",                      // 3: Serials, should use board ID
 };
 
 static uint16_t _desc_str[32];
+
+void set_serial_string (char const *ser)
+{
+  string_desc_arr [3] = ser; // Use board ID as serial number
+} // set_serial_string
 
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
