@@ -52,8 +52,8 @@ msb | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | lsb
 #include "kb-main.h"
 
 /* Are we emitting serial debug? */
-//#define SER_DBG_ON  1  // serial debug on
-#undef SER_DBG_ON      // serial debug off
+#define SER_DBG_ON  1  // serial debug on
+//#undef SER_DBG_ON      // serial debug off
 
 // Keyboard mapping and decode tables
 #define FNK (10)  // Base of the "Function Key" range
@@ -279,6 +279,8 @@ static void make_usb_key (const unsigned char cc)
 {
     uint8_t Mods = 0;
     uint8_t Kcode = 0;
+    uint8_t start_mods = 0;
+    static uint8_t pending_mods = 0;
     msg_blk code;
     code.u_msg = 0;
 
@@ -286,6 +288,20 @@ static void make_usb_key (const unsigned char cc)
     {
         // Some sort of internal key - determine which...
         Kcode = int_codes_table [cc];
+
+        if ((Kcode == HID_KEY_CONTROL_LEFT) || (Kcode == HID_KEY_ALT_LEFT) || (cc == A_C))
+        {
+            // Start a modifier sequence
+            if (Kcode)
+            {
+                start_mods = Kcode;
+                Kcode = 0;
+            }
+            else
+            {
+                start_mods = A_C;
+            }
+        }
     }
     else if (cc < 128)
     {
@@ -295,29 +311,67 @@ static void make_usb_key (const unsigned char cc)
         }
         Kcode = conv_table[cc][1];
     }
-    else if (cc == CER)
+    else if (cc == CER) // Euro symbol €
     {
         Mods = HID_KEY_ALT_RIGHT;
         Kcode = HID_KEY_4; // AlrGr + 4 works for UK layouts...
     }
-    else if (cc == GBP)
+    else if (cc == GBP) // GBP symbol $
     {
         Mods = KEYBOARD_MODIFIER_LEFTSHIFT;
-        Kcode = HID_KEY_3;
+        Kcode = HID_KEY_3; // Shift-3 is correct for UK layouts
     }
-    else if (cc == WIN)
+    else if (cc == WIN) // This is WIN as a modifier
     {
-        Mods = KEYBOARD_MODIFIER_LEFTGUI;
-        Kcode = HID_KEY_GUI_LEFT;
+        // Mods = KEYBOARD_MODIFIER_LEFTGUI;
+        Kcode = 0;
+        start_mods = HID_KEY_GUI_LEFT;
     }
-    else if (cc == WN2)
+    else if (cc == WN2) // This is WIN as a key on its own
     {
         Mods = KEYBOARD_MODIFIER_LEFTGUI;
         Kcode = HID_KEY_GUI_LEFT;
     }
 
-    code.p[3] = Mods;
-    code.p[2] = Kcode;
+    if (start_mods)
+    {
+        pending_mods = start_mods;
+        Kcode = 0;  // ensure nothing is sent this cycle
+    }
+    else if (pending_mods)
+    {
+        if (pending_mods == A_C)
+        {
+            code.p[3] = KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_LEFTALT;
+            code.p[2] = HID_KEY_CONTROL_LEFT;
+            code.p[1] = HID_KEY_ALT_LEFT;
+            code.p[0] = Kcode;
+        }
+        else if (pending_mods == HID_KEY_CONTROL_LEFT)
+        {
+            code.p[3] = KEYBOARD_MODIFIER_LEFTCTRL;
+            code.p[2] = HID_KEY_CONTROL_LEFT;
+            code.p[1] = Kcode;
+        }
+        else if (pending_mods == HID_KEY_ALT_LEFT)
+        {
+            code.p[3] = KEYBOARD_MODIFIER_LEFTALT;
+            code.p[2] = HID_KEY_ALT_LEFT;
+            code.p[1] = Kcode;
+        }
+        else if (pending_mods == HID_KEY_GUI_LEFT)
+        {
+            code.p[3] = KEYBOARD_MODIFIER_LEFTGUI;
+            code.p[2] = HID_KEY_GUI_LEFT;
+            code.p[1] = Kcode;
+        }
+        pending_mods = 0;
+    }
+    else // send the current key
+    {
+        code.p[3] = Mods;
+        code.p[2] = Kcode;
+    }
 
     // If there is a key press ready, pass it to the main thread for processing / sending
     if (Kcode)
@@ -400,7 +454,8 @@ static char decode_bits (const unsigned char bits)
         if (SHFTE)
         {
             SHFTE = 0; // clear a transient SHFTE Shift
-            return eThmb_codes [Fset];
+            //return eThmb_codes [Fset];
+            return cntrc_codes [Fset]; // SHIFT-E followed by NUM is a countermand
         }
         return numbr_codes [Fset];
     }
