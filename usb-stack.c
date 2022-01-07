@@ -146,8 +146,8 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
 // tud_hid_report_complete_cb() is used to send the next report after previous one is complete
 void hid_task(void)
 {
-  // Poll every 10ms
-  const uint32_t interval_ms = 10;
+  // Poll every PW_POLL (nominally 10ms)
+  const uint32_t interval_ms = PW_POLL;
   static uint32_t start_ms = 0;
 
   if ( board_millis() - start_ms < interval_ms) return; // not enough time has elapsed since last poll

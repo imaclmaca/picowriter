@@ -9,6 +9,9 @@
  extern "C" {
 #endif
 
+// Define the polling rate for the USB HID service
+#define PW_POLL  10  // default to 10ms polling rate
+
 // Used to pass a key-combo from the keyboard thread to the USB thread.
 // Uses a pico FIFO to pass a unit32_t. This word has 4 "codes" packed into
 // as "modifiers", "k1", "k2", "k3"

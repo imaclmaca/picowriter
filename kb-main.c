@@ -32,7 +32,7 @@ msb | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 | lsb
  * it does not support the mirrored "left-hand" mode that the CyKey has.
  * Though doing so would only need one more key switch and GPIO line, and if
  * "mirror" mode was selected then the keymap could be bit-reversed and shifted
- * down read to produce the current 8-bit mask. So do-able...
+ * down on read to produce the current 8-bit mask. So do-able...
  *
  */
 
@@ -459,7 +459,7 @@ static char decode_bits (const unsigned char bits)
         }
         return numbr_codes [Fset];
     }
-    else if (bits == CAPS_BIT) // Only the Caps key is pressed at all, no other keys
+    else if (bits == CAPS_BIT) // Only the Caps key is pressed, no other keys
     {
         LCL_SHFT = 1; // Record that a shift was pressed
         if (CAPS >= 2) // already locked, so next push clears it
@@ -554,13 +554,14 @@ int main()
     board_init();
 
     // Try to grab the Pico board ID info.
-    pico_unique_board_id_t id_out;
-    pico_get_unique_board_id (&id_out);
-
     char id_string [(2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES) + 1]; // Should be 17 - PICO_UNIQUE_BOARD_ID_SIZE_BYTES == 8
     pico_get_unique_board_id_string (id_string, 17);
-
     set_serial_string (id_string);
+
+#ifdef SER_DBG_ON
+    pico_unique_board_id_t id_out;
+    pico_get_unique_board_id (&id_out);
+#endif // SER_DBG_ON
 
     // enable the board LED - we flash that to show USB state etc.
     const uint LED_PIN = PICO_DEFAULT_LED_PIN;
