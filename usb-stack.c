@@ -51,8 +51,8 @@ enum  {
 static uint32_t blink_phase = 0;
 
 static const uint16_t blink_not_mounted [BLINK_LEN] = {80, 500, 80, 500}; // SHORT,long,SHORT,long
-static const uint16_t blink_mounted [BLINK_LEN] = {80, 80, 80, 1900}; // SHORT,short,SHORT,long
-static const uint16_t blink_suspended [BLINK_LEN] = {80, 1700, 80, 1700}; // SHORT,long,SHORT,long
+static const uint16_t blink_mounted [BLINK_LEN] = {20, 2500, 20, 2500}; // SHORT,v.long,SHORT,v.long
+static const uint16_t blink_suspended [BLINK_LEN] = {40, 100, 40, 1700}; // SHORT,short,SHORT,long
 
 // Used to track the LED flash state
 static uint32_t blink_state = BLINK_NOT_MOUNTED;
@@ -229,7 +229,8 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
         // Capslock On: disable blink, turn led on
         blink_state = BLINK_NONE;
         board_led_write(true);
-      }else
+      }
+      else
       {
         // Caplocks Off: back to normal blink
         board_led_write(false);
@@ -248,7 +249,7 @@ void led_blinking_task(void)
   static int led_state = 0;
 
   // blink is disabled - typically happens when CapsLock is set ON by tud_hid_set_report_cb()
-  if (!blink_state) return;
+  if (BLINK_NONE == blink_state) return;
 
   const uint16_t *seq = NULL;
   switch (blink_state)
